@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภารกิจนักคิด</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#10182d,#253c69);color:#fff;min-height:100vh}
+.wrap{max-width:850px;margin:auto;padding:24px}.card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:28px;box-shadow:0 15px 50px #0006;backdrop-filter:blur(8px)}
+h1{text-align:center;font-size:38px;margin:5px}.sub{text-align:center;color:#cdd7ff}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}.stat{background:#111a32;padding:12px;border-radius:14px;text-align:center}.stat b{display:block;font-size:23px;margin-top:4px}
+.bar{height:12px;background:#111a32;border-radius:10px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:#61dafb;transition:.3s}
+#question{font-size:24px;line-height:1.4}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answers button,.action{padding:16px;border:0;border-radius:14px;background:#edf2ff;color:#10182d;font-size:17px;cursor:pointer;font-weight:bold}.answers button:hover{transform:translateY(-2px);background:#fff}.correct{background:#62e391!important}.wrong{background:#ff7777!important}
+.action{display:block;margin:18px auto 0;background:#61dafb}.hidden{display:none}.power{display:flex;gap:10px;margin:15px 0}.power button{flex:1;padding:11px;border:0;border-radius:12px;cursor:pointer}.badge{display:inline-block;padding:6px 10px;background:#ffd45c;color:#222;border-radius:20px;font-weight:bold}
+#msg{text-align:center;min-height:30px;font-weight:bold}.screen{text-align:center;padding:45px 10px}.screen h2{font-size:30px}.big{font-size:55px}
+@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.answers{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card" id="app"></div></div>
+<script>
+const levels=[
+{name:"ด่าน 1: มือใหม่หัดคิด",time:20,qs:[
+["ถ้าอินเทอร์เน็ตช้า วิธีใดควรลองก่อน","ปิดเกมทุกเกม","ตรวจสอบการเชื่อมต่อ","ลบคีย์บอร์ด","เพิ่มความสว่าง",1],
+["ข้อมูลใดเป็นรหัสผ่านที่คาดเดายากกว่า","12345678","password","P@9x!Lm2#","qwerty",2],
+["ขั้นตอนใดเกิดก่อนการเขียนโปรแกรมเกม","ทดสอบเกม","วางแผนและออกแบบ","เผยแพร่เกม","ให้คะแนน",1]]},
+{name:"ด่าน 2: นักแก้ปัญหา",time:18,qs:[
+["เกมค้างหลังผู้เล่นกดปุ่มเดิมหลายครั้ง สิ่งใดควรตรวจสอบ","เหตุการณ์ของปุ่ม","สีพื้นหลัง","ชื่อเกม","ขนาดตัวอักษร",0],
+["ถ้าคะแนนเพิ่ม 10 ทุกครั้งที่ตอบถูก 7 ข้อจะได้เท่าไร","50","60","70","80",2],
+["ข้อใดเป็นตัวอย่าง Input ของเกม","เสียงจากลำโพง","การกดปุ่มของผู้เล่น","ภาพบนหน้าจอ","คะแนนที่แสดง",1]]},
+{name:"ด่าน 3: นักวางแผน",time:16,qs:[
+["มีเวลา 16 วินาที ถ้าตอบไปแล้ว 9 วินาที เหลือเท่าไร","5","6","7","8",1],
+["ถ้าต้องการให้เกมสนุกขึ้น ข้อใดช่วยเพิ่มความท้าทายได้","ไม่มีคะแนน","เพิ่มเวลาและไอเทมพิเศษ","ลบเป้าหมาย","ให้ชนะทันที",1],
+["การทดสอบเกมมีเป้าหมายสำคัญที่สุดคืออะไร","หาข้อผิดพลาดและปรับปรุง","เปลี่ยนชื่อผู้เล่น","เพิ่มราคาเกม","ปิดเกม",0]]}
+];
+let level=0,q=0,score=0,lives=3,time=20,timer=null,answered=false,streak=0;
+function start(){level=0;q=0;score=0;lives=3;streak=0;showQuestion()}
+function home(){app.innerHTML=`<div class="screen"><div class="big">🧠⚡</div><h1>ภารกิจนักคิด</h1><p class="sub">การพัฒนาเกมเพื่อฝึกทักษะการเรียนรู้</p><p>ตอบคำถาม • แข่งกับเวลา • ใช้ไอเทม • สะสมคอมโบ</p><button class="action" onclick="start()">เริ่มภารกิจ</button></div>`}
+function showQuestion(){
+ if(level>=levels.length)return end();
+ answered=false;let L=levels[level], data=L.qs[q];time=L.time;
+ app.innerHTML=`<h1>🧠 ภารกิจนักคิด</h1><p><span class="badge">${L.name}</span></p>
+ <div class="stats"><div class="stat">⭐ คะแนน<b>${score}</b></div><div class="stat">❤️ ชีวิต<b>${"❤️".repeat(lives)}</b></div><div class="stat">🔥 คอมโบ<b>x${streak}</b></div><div class="stat">⏱️ เวลา<b id="time">${time}</b></div></div>
+ <div class="bar"><i id="timerbar"></i></div><h2 id="question">${data[0]}</h2>
+ <div class="answers" id="answers"></div><div class="power"><button onclick="fifty()">💡 ตัด 2 ตัวเลือก</button><button onclick="freeze()">❄️ หยุดเวลา 5 วิ</button></div>
+ <p id="msg"></p>`;
+ for(let n=1;n<=4;n++){let b=document.createElement("button");b.textContent=data[n];b.onclick=()=>answer(b,n-1);answers.appendChild(b)}
+ runTimer();
+}
+function runTimer(){clearInterval(timer);timer=setInterval(()=>{time--;document.getElementById("time").textContent=time;document.getElementById("timerbar").style.width=(time/levels[level].time*100)+"%";if(time<=0){clearInterval(timer);loseTime()}},1000)}
+function answer(btn,n){if(answered)return;answered=true;clearInterval(timer);let data=levels[level].qs[q],correct=data[5];let bs=[...document.querySelectorAll("#answers button")];if(n===correct){streak++;let bonus=10+Math.min(streak-1,5)*2+time;score+=bonus;btn.classList.add("correct");msg.textContent=`ถูกต้อง! +${bonus} คะแนน 🔥`; }else{streak=0;lives--;btn.classList.add("wrong");bs[correct].classList.add("correct");msg.textContent="ยังไม่ถูก! เสีย 1 ❤️";}setTimeout(next,1100)}
+function loseTime(){if(answered)return;answered=true;lives--;streak=0;msg.textContent="หมดเวลา! ⏰ เสีย 1 ❤️";setTimeout(next,1000)}
+function next(){if(lives<=0)return gameover();q++;if(q>=levels[level].qs.length){level++;q=0;if(level<levels.length){app.innerHTML=`<div class="screen"><div class="big">🚀</div><h2>ผ่านด่าน!</h2><p>เตรียมเข้าสู่ ${levels[level].name}</p><button class="action" onclick="showQuestion()">ไปด่านต่อ</button></div>`}else end()}else showQuestion()}
+function fifty(){if(answered)return;let data=levels[level].qs[q],correct=data[5],bs=[...document.querySelectorAll("#answers button")],removed=0;bs.forEach((b,i)=>{if(i!==correct&&removed<2){b.disabled=true;b.style.visibility="hidden";removed++}})}
+function freeze(){if(answered)return;clearInterval(timer);msg.textContent="❄️ หยุดเวลา 5 วินาที!";setTimeout(()=>{msg.textContent="";runTimer()},5000)}
+function gameover(){clearInterval(timer);app.innerHTML=`<div class="screen"><div class="big">💥</div><h2>ภารกิจล้มเหลว</h2><p>คะแนนของคุณ: <b>${score}</b></p><button class="action" onclick="start()">ลองใหม่</button></div>`}
+function end(){clearInterval(timer);let rank=score>=250?"🏆 นักคิดระดับสุดยอด":score>=170?"🥇 นักคิดมือโปร":"🥈 นักคิดฝึกหัด";app.innerHTML=`<div class="screen"><div class="big">🏆</div><h2>จบภารกิจ!</h2><p>${rank}</p><h2>คะแนน ${score}</h2><p>คุณผ่านทั้ง 3 ด่านแล้ว</p><button class="action" onclick="start()">เล่นอีกครั้ง</button></div>`}
+home();
+</script>
+</body>
+</html>
